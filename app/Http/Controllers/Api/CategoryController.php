@@ -7,6 +7,7 @@ use App\Http\Requests\CategoryRequest;
 use App\Models\Category;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class CategoryController extends Controller
@@ -14,10 +15,14 @@ class CategoryController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param Request $request
      * @return Category[]|Collection
      */
-    public function index()
+    public function index(Request $request)
     {
+        if ($request->has('only_trashed')) {
+            return Category::onlyTrashed()->get();
+        }
         return Category::all();
     }
 
