@@ -15,6 +15,7 @@ class Category extends Model
     protected $dates = ['deleted_at'];
     protected $fillable = ['name', 'description', 'is_active'];
     protected $casts = [
-        'id' => 'string'
+        'id' => 'string',
+        "is_active" => 'boolean'
     ];
 }
