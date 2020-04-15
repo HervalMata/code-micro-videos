@@ -12,12 +12,12 @@ namespace Tests\Feature\Models;
 use App\Models\Category;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Tests\TestCase;
-use Tests\Traits\Uuid;
+use Tests\Traits\TestUuid;
 
 class CategoryTest extends TestCase
 {
     use DatabaseMigrations;
-    use Uuid;
+    use TestUuid;
 
     public function testList()
     {
