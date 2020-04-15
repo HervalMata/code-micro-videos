@@ -6,12 +6,14 @@ use App\Models\Category;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\TestResponse;
 use Tests\TestCase;
+use Tests\Traits\TestSaves;
 use Tests\Traits\TestValidations;
 
 class CategoryControllerTest extends TestCase
 {
     use DatabaseMigrations;
     use TestValidations;
+    use TestSaves;
 
     private $category;
 
@@ -75,69 +77,69 @@ class CategoryControllerTest extends TestCase
 
     public function testStore()
     {
-        $response = $this->json('POST', route('categories.store'), [
-            'name' => 'test'
+        $response = $this->assertStore(
+            ['name' => 'teste1'],
+            [
+                'name' => 'teste1',
+                'description' => null,
+                'is_active' => true,
+                'deleted_at' => null
+            ]
+        );
+
+        $response->assertJsonStructure([
+            'created_at',
+            'updated_at'
         ]);
 
-        $id = $response->json('id');
-        $category = Category::find($id);
-
-        $response
-            ->assertStatus(201)
-            ->assertJson($category->toArray());
-
-        $this->assertTrue($response->json('is_active'));
-        $this->assertNull($response->json('description'));
-
-        $response = $this->json('POST', route('categories.store'), [
-            'name' => 'test',
-            'description' => 'Test Description',
-            'is_active' => false
-        ]);
-
-        $response
-            ->assertStatus(201)
-            ->assertJsonFragment([
-                'description' => 'Test Description',
+        $response = $this->assertStore(
+            [
+                'name' => 'teste1',
+                'description' => 'description',
                 'is_active' => false
-            ]);
+            ],
+            [
+                'name' => 'teste1',
+                'description' => 'description',
+                'is_active' => true,
+                'deleted_at' => null
+            ]
+        );
     }
 
     public function testUpdate()
     {
-        $category = factory(Category::class)->create([
+        $this->category = factory(Category::class)->create([
             'description' => 'Test Description',
             'is_active' => false
         ]);
 
-        $response = $this->json('PUT', route('categories.update', ['category' => $category->id]), [
+        $data = [
             'name' => 'test',
             'description' => 'Test Update Description',
             'is_active' => true
+        ];
+
+        $response = $this->assertUpdate($data, $data + ['deleted_at' => null]);
+
+        $response->assertJsonStructure([
+            'created_at',
+            'updated_at'
         ]);
 
-        $id = $response->json('id');
-        $category = Category::find($id);
-
-        $response
-            ->assertStatus(200)
-            ->assertJson($category->toArray())
-            ->assertJsonFragment([
-                'name' => 'test',
-                'description' => 'Test Update Description',
-                'is_active' => true
-            ]);
-
-        $response = $this->json('PUT', route('categories.update', ['category' => $category->id]), [
+        $data = [
             'name' => 'test',
             'description' => '',
             'is_active' => true
-        ]);
+        ];
 
-        $response
-            ->assertJsonFragment([
-                'description' => null
-            ]);
+        $this->assertUpdate($data, array_merge($data, ['description' => null]));
+
+        $data['description'] = 'test';
+        $this->assertUpdate($data, array_merge($data, ['description' => 'test']));
+
+        $data['description'] = null;
+        $this->assertUpdate($data, array_merge($data, ['description' => null]));
     }
 
     public function testDestroy()
@@ -168,5 +170,10 @@ class CategoryControllerTest extends TestCase
     protected function routeUpdate()
     {
         return route('categories.update', ['category' => $this->category->id]);
+    }
+
+    protected function model()
+    {
+        return Category::class;
     }
 }
